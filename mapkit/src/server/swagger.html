@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mapkit-server — API docs</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: "SpaceMono", ui-monospace, Menlo, monospace; background: #17181a; color: #d8d4cc;
+         margin: 0; padding: 2rem; line-height: 1.55; }
+  h1 { font-size: 1.4rem; color: #f0ede6; margin: 0 0 .2rem; }
+  h2 { font-size: 1.05rem; color: #f0ede6; margin: 1.6rem 0 .4rem; border-bottom: 1px solid #33363b; padding-bottom: .3rem; }
+  .badge { display: inline-block; padding: .1rem .5rem; border-radius: 6px; font-size: .8rem; margin-left: .4rem; }
+  .ok  { background: #1d3a26; color: #7dd899; }
+  .bad { background: #45201f; color: #e58e8b; }
+  .muted { color: #8b8f97; font-size: .85rem; }
+  code { background: #22252a; padding: .1rem .35rem; border-radius: 4px; font-size: .85em; }
+  .ep { background: #1e2023; border: 1px solid #33363b; border-radius: 8px; padding: .8rem 1rem; margin: .6rem 0; }
+  .method { font-weight: 700; margin-right: .5rem; }
+  .get { color: #7dd899; } .post { color: #e8c56d; }
+  button { background: #2a2d33; color: #d8d4cc; border: 1px solid #3a3e45; border-radius: 6px;
+           padding: .25rem .7rem; cursor: pointer; font-family: inherit; }
+  button:hover { background: #34383f; }
+  pre { background: #101214; border: 1px solid #2b2e33; border-radius: 6px; padding: .6rem;
+        overflow-x: auto; font-size: .8rem; max-height: 20rem; overflow-y: auto; }
+  input { background: #101214; color: #d8d4cc; border: 1px solid #3a3e45; border-radius: 6px; padding: .3rem .5rem; font-family: inherit; }
+</style>
+</head>
+<body>
+<h1>mapkit-server <span class="muted">API docs</span>
+  <span id="live" class="badge">checking…</span></h1>
+<p class="muted">Every route below is real and served by this process. Spec source: <a style="color:#7dd899" href="/openapi.json">/openapi.json</a>.</p>
+<div id="docs">loading spec…</div>
+
+<script>
+async function refresh() {
+  try {
+    const r = await fetch("/health");
+    const j = await r.json();
+    const el = document.getElementById("live");
+    if (j.status === "ok") {
+      el.className = "badge ok";
+      el.textContent = "● running — " + (j.zones ?? j.collections ?? "?") + " zone(s), " +
+        (j.tiles ?? 0) + " tile(s), up " + (j.uptime_s ?? 0) + "s";
+    } else { throw new Error("not ok"); }
+  } catch (e) {
+    const el = document.getElementById("live");
+    el.className = "badge bad";
+    el.textContent = "● health check failed";
+  }
+}
+
+function tryBox(path) {
+  return `
+  <div class="try" data-path="${path}">
+    <button onclick="tryIt(this)">try it</button>
+    <pre class="out" style="display:none"></pre>
+  </div>`;
+}
+
+async function tryIt(btn) {
+  const box = btn.closest(".try");
+  const path = box.dataset.path;
+  const out = box.querySelector(".out");
+  out.style.display = "block";
+  out.textContent = "…";
+  try {
+    const r = await fetch(path);
+    const ct = r.headers.get("content-type") || "";
+    const body = ct.includes("json") ? JSON.stringify(await r.json(), null, 2)
+               : ct.includes("image") || ct.includes("octet-stream")
+                 ? `(binary, ${(await r.blob()).size} bytes)`
+                 : (await r.text()).slice(0, 2000);
+    out.textContent = `${r.status} ${r.statusText}\n\n${body}`;
+  } catch (e) { out.textContent = "fetch failed: " + e; }
+}
+
+(async function render() {
+  const spec = await (await fetch("/openapi.json")).json();
+  const docs = document.getElementById("docs");
+  let html = "";
+  for (const [path, ops] of Object.entries(spec.paths)) {
+    for (const [method, op] of Object.entries(ops)) {
+      if (method.startsWith("x-") || method === "parameters") continue;
+      let ep = `<div class="ep"><span class="method ${method}">${method.toUpperCase()}</span><code>${path}</code>
+        <div class="muted">${op.summary || ""}</div>`;
+      if (method === "get" && !path.includes("{")) ep += tryBox(path);
+      if (method === "post" && op.requestBody) {
+        ep += `<details><summary class="muted" style="cursor:pointer">request body</summary><pre>${
+          JSON.stringify(op.requestBody.content["application/json"].schema, null, 2)}</pre></details>`;
+      }
+      ep += "</div>";
+      html += ep;
+    }
+  }
+  docs.innerHTML = html;
+})();
+refresh(); setInterval(refresh, 5000);
+</script>
+</body>
+</html>

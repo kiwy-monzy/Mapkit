@@ -1,0 +1,40 @@
+# ── secrets / local env ────────────────────────────────────────────────
+# Never commit real tokens. `.env.example` files ARE committed as templates.
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ── rust ─────────────────────────────────────────────────────────────────
+target/
+**/target/
+Cargo.lock.bak
+*.pdb
+
+# ── node / web ───────────────────────────────────────────────────────────
+node_modules/
+mapkit-web/node_modules/
+mapkit-web/dist/
+mapkit-web/.vite/
+dist/
+*.local
+
+# ── mapkit runtime artefacts (generated, often huge) ─────────────────────
+tilecache/
+**/tilecache/
+assets/collections/*.mapbin
+assets/collections/*.report.txt
+*.mapbin
+*.report.txt
+mapkit.db
+mapkit.db-journal
+*.db-journal
+
+# ── os / editor ──────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

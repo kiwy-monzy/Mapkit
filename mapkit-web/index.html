@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>mapkit — zone picker</title>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <div class="brand">
+          <h1>map<span>kit</span></h1>
+          <p>draw a zone → preview tile features per-class → export a <code>.mapbin</code> collection</p>
+        </div>
+        <div class="top-actions">
+          <select id="style" title="basemap style"></select>
+          <button id="brushBtn" class="ghost" title="paint to fetch missing tiles (vector z15+z14, terrain)">Brush</button>
+          <input id="brushRadius" type="range" min="100" max="2000" step="50" value="500" title="brush radius (m)" hidden />
+          <button id="drawBtn">Draw zone</button>
+          <span id="drawCtl" hidden>
+            <button id="finishBtn" disabled>Finish</button>
+            <button id="undoBtn" class="ghost" disabled>Undo</button>
+            <button id="cancelBtn" class="ghost">Cancel</button>
+          </span>
+        </div>
+      </header>
+      <main>
+        <div id="mapWrap">
+          <div id="map"></div>
+          <div id="drawHint" hidden>click to place zone corners</div>
+        </div>
+        <aside>
+          <section>
+            <div class="rowbetween">
+              <h2>Zone source</h2>
+              <span class="tabs">
+                <button id="tabDraw" class="sm">Draw</button>
+                <button id="tabAdmin" class="ghost sm">Admin zones</button>
+              </span>
+            </div>
+            <div id="drawPane">
+              <div id="zoneInfo" class="muted">No zone yet. Draw a zone on the map.</div>
+              <button id="previewBtn" disabled>Get map data (selectable preview)</button>
+            </div>
+            <div id="adminPane" hidden>
+              <label class="fld">Search regions · districts · wards
+                <input id="adminSearch" placeholder="e.g. Mbezi, Ilala, Mwanza…" />
+              </label>
+              <div id="searchHits"></div>
+              <label class="fld">Region
+                <select id="regionSel"><option value="">loading…</option></select>
+              </label>
+              <label class="fld">District
+                <select id="districtSel" disabled><option value="">pick a region first</option></select>
+              </label>
+              <label class="fld">Ward
+                <select id="wardSel" disabled><option value="">pick a district first</option></select>
+              </label>
+              <div id="adminInfo" class="muted"></div>
+              <div class="row">
+                <button id="adminPreviewBtn" disabled>Preview boundary</button>
+                <button id="adminPreviewDataBtn" class="ghost" disabled>Get map data</button>
+              </div>
+            </div>
+          </section>
+          <section>
+            <h2>Tile features — select what to keep</h2>
+            <div id="selBar" class="row" hidden>
+              <button id="allBtn" class="ghost sm">All</button>
+              <button id="noneBtn" class="ghost sm">None</button>
+            </div>
+            <div id="layers"><p class="muted">After closing a zone, fetch its data — every road/water/landcover class from the cached vector tiles becomes a checkbox. Only checked classes are packed on export.</p></div>
+          </section>
+          <section>
+            <h2>Export collection</h2>
+            <label class="fld">Zone name
+              <input id="zoneName" placeholder="e.g. Mbezi beach…" />
+            </label>
+            <label class="rowchk"><input type="checkbox" id="forceCity" /> Force flat terrain (city mode)</label>
+            <label class="fld">Road detail floor
+              <select id="minClass">
+                <option value="">keep all (incl. driveways)</option>
+                <option value="service">service+ (drop paths)</option>
+                <option value="residential">residential+ (major roads)</option>
+              </select>
+            </label>
+            <label class="rowchk"><input type="checkbox" id="incBuildings" checked /> buildings</label>
+            <label class="rowchk"><input type="checkbox" id="incRails" checked /> rails</label>
+            <label class="rowchk"><input type="checkbox" id="incWaterways" checked /> rivers / waterways</label>
+            <label class="rowchk"><input type="checkbox" id="incBoundary" checked /> district + ward boundaries</label>
+            <button id="exportBtn" disabled>Export .mapbin collection</button>
+            <pre id="exportLog" hidden></pre>
+          </section>
+          <section>
+            <div class="rowbetween">
+              <h2>Collections (<span id="colCount">0</span>)</h2>
+              <button id="refreshBtn" class="ghost sm">Refresh</button>
+            </div>
+            <div id="collections"></div>
+          </section>
+        </aside>
+      </main>
+      <footer><span id="status">loading…</span><span class="hide-sm">native app → Collections window → load</span></footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

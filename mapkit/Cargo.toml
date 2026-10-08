@@ -1,0 +1,46 @@
+[package]
+name = "mapkit"
+version = "0.8.0"
+edition = "2021"
+
+# mapkit — the map data kit for the Egregoria map editor.
+#
+# ONE crate that carries the whole map data plane:
+#   * the mapstudio pipeline (ported): boundaries → zone polygons → Mapbox
+#     tiles (vector streets-v8 + terrain-RGB DEM) → THE one Mercator →
+#     joined road graph + water-carved DEM,
+#   * the mapkit kit itself: `.mapbin` bundle packing + the layer-source
+#     registry the engine's editor consumes,
+#   * the mapkit-server (moved out of the standalone `mapkit-server`
+#     crate): a Rocket + Diesel (SQLite) HTTP service that streams XYZ
+#     tiles (raster basemap / vector MVT / terrain DEM) straight out of
+#     the shared `tilecache/`, owns the zone registry and grabs new zones
+#     by spawning the prebuilt `mapkit-cli`.
+#
+# The server is a *library module* (`mapkit::server`): the Egregoria
+# native app boots it INSIDE the game process on a background thread
+# (`mapkit::server::spawn_embedded`) — no standalone service to start.
+# A `mapkit-cli` binary is still provided for scripting/headless grabs.
+
+[dependencies]
+png = "0.17"
+flate2 = "1"
+serde_json = "1"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+dotenvy = "0.15"
+
+# mapkit-server (embedded)
+rocket            = { version = "0.5", features = ["json"] }
+diesel            = { version = "2.2", features = ["sqlite"] }
+diesel_migrations = { version = "2.2", features = ["sqlite"] }
+libsqlite3-sys    = { version = "0.28", features = ["bundled"] }
+ureq              = { version = "2", features = ["json"] }
+
+[[bin]]
+name = "mapkit-cli"
+path = "src/cli.rs"
+
+[[bin]]
+name = "mapkit-server-standalone"
+path = "src/bin/mapkit_server_standalone.rs"
